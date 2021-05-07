@@ -7,6 +7,7 @@ export type ClientRequestSocketCallback = (socket: net.Socket) => void
 export type SocketConnectCallback = (this: net.Socket) => void
 export type SocketErrorCallback = (this: net.Socket, err: Error) => void
 export type SocketTimeoutCallback = (this: net.Socket) => void
+export type SocketEndCallback = (this: net.Socket) => void
 
 interface prototypeFields {
   createSocket: (req: http.ClientRequest, options: http.ClientRequestArgs, oncreate: OncreateCallback) => void

@@ -11,11 +11,29 @@ const PORT_SENTINEL = '${PORT_8750beb7c50c}'
 const SPY_PRODUCER = 'connection-spy'
 
 /**
- * monkeyPatch should be invoked before **any** code that does `https` operations.
+ * monkeyPatch should be invoked before **any** code that does `http` or `https` operations.
  * For example, code that prepopulates a connection pool at application start.
  */
 export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): void {
+  monkeyPatchHTTP(debug)
   monkeyPatchHTTPS(debug)
+}
+
+function monkeyPatchHTTP(debug: winston.LeveledLogMethod): void {
+  const originalHttpAgent = http.Agent
+
+  class SpyAgent extends originalHttpAgent {
+    constructor(options?: http.AgentOptions) {
+      // NOTE: This derived class isn't strictly necessary, but we put it here
+      //       in case future customizations are desired.
+      super(options)
+    }
+  }
+
+  monkeyPatchAgentCreateSocket((SpyAgent as unknown) as types.AgentType, debug)
+  monkeyPatchAgentReuseSocket((SpyAgent as unknown) as types.AgentType, debug)
+  // @ts-ignore
+  http.Agent = SpyAgent
 }
 
 function monkeyPatchHTTPS(debug: winston.LeveledLogMethod): void {

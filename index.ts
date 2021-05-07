@@ -2,6 +2,7 @@ import * as http from 'http'
 import * as https from 'https'
 import * as net from 'net'
 import * as uuid from 'uuid'
+import * as winston from 'winston'
 
 import * as logger from './logger'
 import * as types from './types'
@@ -10,7 +11,7 @@ import * as types from './types'
  * monkeyPatch should be invoked before **any** code that does `https` operations.
  * For example, code that prepopulates a connection pool at application start.
  */
-export function monkeyPatch(): void {
+export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): void {
   const originalHttpsAgent = https.Agent
 
   class SpyAgent extends originalHttpsAgent {
@@ -24,13 +25,13 @@ export function monkeyPatch(): void {
     }
   }
 
-  monkeyPatchAgentCreateSocket((SpyAgent as unknown) as types.AgentType)
-  monkeyPatchAgentReuseSocket((SpyAgent as unknown) as types.AgentType)
+  monkeyPatchAgentCreateSocket((SpyAgent as unknown) as types.AgentType, debug)
+  monkeyPatchAgentReuseSocket((SpyAgent as unknown) as types.AgentType, debug)
   // @ts-ignore
   https.Agent = SpyAgent
 }
 
-function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType): void {
+function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, _debug: winston.LeveledLogMethod): void {
   const originalCreateSocket = derivedAgent.prototype.createSocket
   derivedAgent.prototype.createSocket = function createSocket(
     req: http.ClientRequest,
@@ -41,11 +42,11 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType): void {
   }
 }
 
-function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType): void {
+function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, request: http.ClientRequest): void {
     const id = uuid.v4()
-    logger.debug('Reuse Socket', { id })
+    debug('Reuse Socket', { id })
     const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
     return reuseSocketResult
   }

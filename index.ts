@@ -34,6 +34,15 @@ export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): voi
   https.Agent = SpyAgent
 }
 
+export function spyNewSocket(
+  _id: string,
+  _targetTemplate: string,
+  _socket: net.Socket,
+  _debug: winston.LeveledLogMethod = logger.debug,
+): void {
+  return
+}
+
 function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
   const originalCreateSocket = derivedAgent.prototype.createSocket
   derivedAgent.prototype.createSocket = function createSocket(
@@ -94,11 +103,11 @@ function makeClientRequestResponseCallback(
 }
 
 function makeClientRequestSocketCallback(
-  _id: string,
-  _targetTemplate: string,
-  _debug: winston.LeveledLogMethod,
+  id: string,
+  targetTemplate: string,
+  debug: winston.LeveledLogMethod,
 ): types.ClientRequestSocketCallback {
-  return function clientRequestSocket(_socket: net.Socket): void {
-    // TODO
+  return function clientRequestSocket(socket: net.Socket): void {
+    spyNewSocket(id, targetTemplate, socket, debug)
   }
 }

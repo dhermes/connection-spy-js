@@ -7,6 +7,9 @@ import * as winston from 'winston'
 import * as logger from './logger'
 import * as types from './types'
 
+const PORT_SENTINEL = '${PORT_8750beb7c50c}'
+const SPY_PRODUCER = 'connection-spy'
+
 /**
  * monkeyPatch should be invoked before **any** code that does `https` operations.
  * For example, code that prepopulates a connection pool at application start.
@@ -46,8 +49,29 @@ function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winst
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, request: http.ClientRequest): void {
     const id = uuid.v4()
-    debug('Reuse Socket', { id })
+    const targetTemplate = requestTargetTemplate(request)
+    const ctx = getContext(id, targetTemplate, socket)
+    debug('Reuse Socket', ctx)
+
     const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
     return reuseSocketResult
+  }
+}
+
+function requestTargetTemplate(req: http.ClientRequest): string {
+  return `${req.method} ${req.protocol}//${req.host}:${PORT_SENTINEL}${req.path}`
+}
+
+function getContext(id: string, targetTemplate: string, socket: net.Socket): types.Context {
+  const port = socket.remotePort || null
+  const fullTarget = targetTemplate.replace(PORT_SENTINEL, `${port}`)
+  return {
+    id,
+    producer: SPY_PRODUCER,
+    localAddress: socket.localAddress,
+    localPort: socket.localPort,
+    remoteAddress: socket.remoteAddress || null,
+    remotePort: port,
+    target: fullTarget,
   }
 }

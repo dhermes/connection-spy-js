@@ -11,3 +11,13 @@ interface prototypeFields {
 export interface AgentType {
   prototype: prototypeFields
 }
+
+export interface Context {
+  id: string
+  producer: string
+  localAddress: string
+  localPort: number
+  remoteAddress: string | null
+  remotePort: number | null
+  target?: string
+}

@@ -1,5 +1,6 @@
 import * as http from 'http'
 import * as https from 'https'
+import * as net from 'net'
 
 import * as types from './types'
 
@@ -22,6 +23,7 @@ export function monkeyPatch(): void {
   }
 
   monkeyPatchAgentCreateSocket((SpyAgent as unknown) as types.AgentType)
+  monkeyPatchAgentReuseSocket((SpyAgent as unknown) as types.AgentType)
   // @ts-ignore
   https.Agent = SpyAgent
 }
@@ -34,5 +36,13 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType): void {
     cb: types.OncreateCallback,
   ): void {
     originalCreateSocket.apply(this, [req, options, cb])
+  }
+}
+
+function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType): void {
+  const originalReuseSocket = derivedAgent.prototype.reuseSocket
+  derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, request: http.ClientRequest): void {
+    const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
+    return reuseSocketResult
   }
 }

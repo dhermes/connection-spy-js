@@ -1,6 +1,6 @@
 {
   "name": "connection-spy",
-  "version": "0.3.0",
+  "version": "0.3.1-dev",
   "description": "Debug Logger for Socket Connections",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",

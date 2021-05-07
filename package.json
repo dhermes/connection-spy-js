@@ -6,6 +6,23 @@
   "scripts": {
     "test": "exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhermes/ts-connection-spy.git"
+  },
+  "keywords": [
+    "tcp",
+    "socket",
+    "connection",
+    "monkeypatch"
+  ],
   "author": "Danny Hermes",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/dhermes/ts-connection-spy/issues"
+  },
+  "homepage": "https://github.comdhermes/ts-connection-spy#readme",
+  "engines": {
+    "node": ">=14"
+  }
 }

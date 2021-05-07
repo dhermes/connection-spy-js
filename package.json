@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm ci && npm run build",
-    "prettier": "prettier --write index.ts types.ts",
+    "prettier": "prettier --write index.ts logger.ts types.ts",
     "test": "exit 1"
   },
   "repository": {
@@ -31,7 +31,12 @@
   },
   "devDependencies": {
     "@types/node": "15.0.2",
+    "@types/uuid": "8.3.0",
     "prettier": "2.2.1",
     "typescript": "4.2.4"
+  },
+  "dependencies": {
+    "uuid": "8.3.2",
+    "winston": "3.3.3"
   }
 }

@@ -1,7 +1,9 @@
 import * as http from 'http'
 import * as https from 'https'
 import * as net from 'net'
+import * as uuid from 'uuid'
 
+import * as logger from './logger'
 import * as types from './types'
 
 /**
@@ -42,6 +44,8 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType): void {
 function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType): void {
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, request: http.ClientRequest): void {
+    const id = uuid.v4()
+    logger.debug('Reuse Socket', { id })
     const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
     return reuseSocketResult
   }

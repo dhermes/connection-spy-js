@@ -5,6 +5,9 @@
 !lib/index.d.ts
 !lib/index.js
 !lib/index.js.map
+!lib/logger.d.ts
+!lib/logger.js
+!lib/logger.js.map
 !lib/types.d.ts
 !lib/types.js
 !lib/types.js.map

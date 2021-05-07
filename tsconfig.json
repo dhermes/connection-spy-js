@@ -21,6 +21,7 @@
     },
     "include": [
         "index.ts",
+        "logger.ts",
         "types.ts"
     ],
     "exclude": [

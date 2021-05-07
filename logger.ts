@@ -9,6 +9,8 @@ function addLogTimestamp(info: logform.TransformableInfo, _opts?: any): logform.
 const jsonLogger = winston.createLogger({
   level: 'debug',
   format: winston.format.combine(winston.format.splat(), winston.format(addLogTimestamp)(), winston.format.json()),
+  exitOnError: false,
+  transports: [new winston.transports.Console()],
 })
 
 export const debug = jsonLogger.debug.bind(jsonLogger)

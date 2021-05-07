@@ -44,7 +44,7 @@ export function spyNewSocket(
   socket.on('error', makeSocketErrorCallback(id, debug))
   socket.on('timeout', makeSocketTimeoutCallback(id, debug))
   socket.on('end', makeSocketEndCallback(id, debug))
-  // TODO: close
+  socket.on('close', makeSocketCloseCallback(id, debug))
 }
 
 function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
@@ -148,5 +148,13 @@ function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): typ
     const ctx = getContext(id, '', this)
     delete ctx.target
     debug('Socket End', ctx)
+  }
+}
+
+function makeSocketCloseCallback(id: string, debug: winston.LeveledLogMethod): types.SocketCloseCallback {
+  return function socketClose(this: net.Socket, hadError: boolean): void {
+    const ctx = getContext(id, '', this)
+    delete ctx.target
+    debug('Socket Close', { ...ctx, hadError })
   }
 }

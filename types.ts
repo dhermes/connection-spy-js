@@ -22,8 +22,8 @@ export interface AgentType {
 export interface Context {
   id: string
   producer: string
-  localAddress: string
-  localPort: number
+  localAddress: string | null
+  localPort: number | null
   remoteAddress: string | null
   remotePort: number | null
   target?: string

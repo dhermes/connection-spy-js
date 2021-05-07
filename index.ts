@@ -109,8 +109,8 @@ function getContext(id: string, targetTemplate: string, socket: net.Socket): typ
   return {
     id,
     producer: SPY_PRODUCER,
-    localAddress: socket.localAddress,
-    localPort: socket.localPort,
+    localAddress: socket.localAddress || null,
+    localPort: socket.localPort || null,
     remoteAddress: socket.remoteAddress || null,
     remotePort: port,
     target: fullTarget,

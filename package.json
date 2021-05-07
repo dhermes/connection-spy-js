@@ -1,0 +1,11 @@
+{
+  "name": "connection-spy",
+  "version": "0.0.1",
+  "description": "Debug Logger for Socket Connections",
+  "main": "index.js",
+  "scripts": {
+    "test": "exit 1"
+  },
+  "author": "Danny Hermes",
+  "license": "Apache-2.0"
+}

@@ -5,6 +5,9 @@
 !lib/index.d.ts
 !lib/index.js
 !lib/index.js.map
+!lib/types.d.ts
+!lib/types.js
+!lib/types.js.map
 !LICENSE
 !package.json
 !README.md

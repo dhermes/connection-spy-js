@@ -1,4 +1,7 @@
+import * as http from 'http'
 import * as https from 'https'
+
+import * as types from './types'
 
 /**
  * monkeyPatch should be invoked before **any** code that does `https` operations.
@@ -18,6 +21,18 @@ export function monkeyPatch(): void {
     }
   }
 
+  monkeyPatchAgentCreateSocket((SpyAgent as unknown) as types.AgentType)
   // @ts-ignore
   https.Agent = SpyAgent
+}
+
+function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType): void {
+  const originalCreateSocket = derivedAgent.prototype.createSocket
+  derivedAgent.prototype.createSocket = function createSocket(
+    req: http.ClientRequest,
+    options: http.ClientRequestArgs,
+    cb: types.OncreateCallback,
+  ): void {
+    originalCreateSocket.apply(this, [req, options, cb])
+  }
 }

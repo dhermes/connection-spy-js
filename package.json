@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm ci && npm run build",
-    "prettier": "prettier --write index.ts",
+    "prettier": "prettier --write index.ts types.ts",
     "test": "exit 1"
   },
   "repository": {

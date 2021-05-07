@@ -42,7 +42,7 @@ export function spyNewSocket(
 ): void {
   socket.on('connect', makeSocketConnectCallback(id, targetTemplate, debug))
   socket.on('error', makeSocketErrorCallback(id, debug))
-  // TODO: timeout
+  socket.on('timeout', makeSocketTimeoutCallback(id, debug))
   // TODO: end
   // TODO: close
 }
@@ -132,5 +132,13 @@ function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): t
     const ctx = getContext(id, '', this)
     delete ctx.target
     debug('Socket Error', { ...ctx, err })
+  }
+}
+
+function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod): types.SocketTimeoutCallback {
+  return function socketTimeout(this: net.Socket): void {
+    const ctx = getContext(id, '', this)
+    delete ctx.target
+    debug('Socket Timeout', ctx)
   }
 }

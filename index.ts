@@ -36,11 +36,11 @@ export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): voi
 
 export function spyNewSocket(
   id: string,
-  _targetTemplate: string,
+  targetTemplate: string,
   socket: net.Socket,
   debug: winston.LeveledLogMethod = logger.debug,
 ): void {
-  // TODO: connect
+  socket.on('connect', makeSocketConnectCallback(id, targetTemplate, debug))
   socket.on('error', makeSocketErrorCallback(id, debug))
   // TODO: timeout
   // TODO: end
@@ -113,6 +113,17 @@ function makeClientRequestSocketCallback(
 ): types.ClientRequestSocketCallback {
   return function clientRequestSocket(socket: net.Socket): void {
     spyNewSocket(id, targetTemplate, socket, debug)
+  }
+}
+
+function makeSocketConnectCallback(
+  id: string,
+  targetTemplate: string,
+  debug: winston.LeveledLogMethod,
+): types.SocketConnectCallback {
+  return function socketConnect(this: net.Socket): void {
+    const ctx = getContext(id, targetTemplate, this)
+    debug('Socket Connect', ctx)
   }
 }
 

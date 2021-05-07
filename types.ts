@@ -4,6 +4,7 @@ import * as net from 'net'
 export type OncreateCallback = (err: Error | null, socket?: net.Socket) => void
 export type ClientRequestResponseCallback = (response: http.IncomingMessage) => void
 export type ClientRequestSocketCallback = (socket: net.Socket) => void
+export type SocketConnectCallback = (this: net.Socket) => void
 export type SocketErrorCallback = (this: net.Socket, err: Error) => void
 
 interface prototypeFields {

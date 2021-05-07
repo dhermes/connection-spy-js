@@ -61,14 +61,14 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: wins
 
 function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
-  derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, request: http.ClientRequest): void {
+  derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, req: http.ClientRequest): void {
     const id = uuid.v4()
-    const targetTemplate = requestTargetTemplate(request)
+    const targetTemplate = requestTargetTemplate(req)
     const ctx = getContext(id, targetTemplate, socket)
     debug('Reuse Socket', ctx)
 
-    request.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
-    const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
+    req.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
+    const reuseSocketResult = originalReuseSocket.apply(this, [socket, req])
     return reuseSocketResult
   }
 }

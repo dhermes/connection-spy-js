@@ -35,12 +35,16 @@ export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): voi
 }
 
 export function spyNewSocket(
-  _id: string,
+  id: string,
   _targetTemplate: string,
-  _socket: net.Socket,
-  _debug: winston.LeveledLogMethod = logger.debug,
+  socket: net.Socket,
+  debug: winston.LeveledLogMethod = logger.debug,
 ): void {
-  return
+  // TODO: connect
+  socket.on('error', makeSocketErrorCallback(id, debug))
+  // TODO: timeout
+  // TODO: end
+  // TODO: close
 }
 
 function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
@@ -109,5 +113,13 @@ function makeClientRequestSocketCallback(
 ): types.ClientRequestSocketCallback {
   return function clientRequestSocket(socket: net.Socket): void {
     spyNewSocket(id, targetTemplate, socket, debug)
+  }
+}
+
+function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): types.SocketErrorCallback {
+  return function socketError(this: net.Socket, err: Error): void {
+    const ctx = getContext(id, '', this)
+    delete ctx.target
+    debug('Socket Error', { ...ctx, err })
   }
 }

@@ -76,11 +76,31 @@ export function spyNewSocket(
   socket: net.Socket,
   debug: winston.LeveledLogMethod = logger.debug,
 ): void {
+  stashID(socket, id)
   socket.on('connect', makeSocketConnectCallback(id, targetTemplate, debug))
   socket.on('error', makeSocketErrorCallback(id, debug))
   socket.on('timeout', makeSocketTimeoutCallback(id, debug))
   socket.on('end', makeSocketEndCallback(id, debug))
   socket.on('close', makeSocketCloseCallback(id, debug))
+}
+
+/**
+ * Stash the ID on the socket (in case the socket is reused).
+ * @param socket
+ * @param id
+ */
+function stashID(socket: net.Socket, id: string): void {
+  // @ts-ignore
+  socket._connection_spy_id = id
+}
+
+/**
+ * Check if there is an ID stashed on the socket.
+ * @param socket
+ */
+function getStashedID(socket: net.Socket): string | undefined {
+  // @ts-ignore
+  return socket._connection_spy_id
 }
 
 function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
@@ -102,7 +122,7 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: wins
 function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, req: http.ClientRequest): void {
-    const id = uuid.v4()
+    const id = getStashedID(socket) || uuid.v4()
     const targetTemplate = requestTargetTemplate(req)
     const ctx = getContext(id, targetTemplate, socket)
     debug('Reuse Socket', ctx)

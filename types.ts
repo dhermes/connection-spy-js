@@ -2,6 +2,7 @@ import * as http from 'http'
 import * as net from 'net'
 
 export type OncreateCallback = (err: Error | null, socket?: net.Socket) => void
+export type ClientRequestResponseCallback = (response: http.IncomingMessage) => void
 
 interface prototypeFields {
   createSocket: (req: http.ClientRequest, options: http.ClientRequestArgs, oncreate: OncreateCallback) => void

@@ -34,13 +34,17 @@ export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): voi
   https.Agent = SpyAgent
 }
 
-function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, _debug: winston.LeveledLogMethod): void {
+function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
   const originalCreateSocket = derivedAgent.prototype.createSocket
   derivedAgent.prototype.createSocket = function createSocket(
     req: http.ClientRequest,
     options: http.ClientRequestArgs,
     cb: types.OncreateCallback,
   ): void {
+    const id = uuid.v4()
+    const targetTemplate = requestTargetTemplate(req)
+    req.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
+
     originalCreateSocket.apply(this, [req, options, cb])
   }
 }
@@ -53,6 +57,7 @@ function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winst
     const ctx = getContext(id, targetTemplate, socket)
     debug('Reuse Socket', ctx)
 
+    request.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
     const reuseSocketResult = originalReuseSocket.apply(this, [socket, request])
     return reuseSocketResult
   }
@@ -73,5 +78,16 @@ function getContext(id: string, targetTemplate: string, socket: net.Socket): typ
     remoteAddress: socket.remoteAddress || null,
     remotePort: port,
     target: fullTarget,
+  }
+}
+
+function makeClientRequestResponseCallback(
+  id: string,
+  targetTemplate: string,
+  debug: winston.LeveledLogMethod,
+): types.ClientRequestResponseCallback {
+  return function clientRequestResponse(response: http.IncomingMessage): void {
+    const ctx = getContext(id, targetTemplate, response.socket)
+    debug('HTTP(S) Response', ctx)
   }
 }

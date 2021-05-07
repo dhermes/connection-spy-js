@@ -43,6 +43,7 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: wins
   ): void {
     const id = uuid.v4()
     const targetTemplate = requestTargetTemplate(req)
+    req.on('socket', makeClientRequestSocketCallback(id, targetTemplate, debug))
     req.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
 
     originalCreateSocket.apply(this, [req, options, cb])
@@ -89,5 +90,15 @@ function makeClientRequestResponseCallback(
   return function clientRequestResponse(response: http.IncomingMessage): void {
     const ctx = getContext(id, targetTemplate, response.socket)
     debug('HTTP(S) Response', ctx)
+  }
+}
+
+function makeClientRequestSocketCallback(
+  _id: string,
+  _targetTemplate: string,
+  _debug: winston.LeveledLogMethod,
+): types.ClientRequestSocketCallback {
+  return function clientRequestSocket(_socket: net.Socket): void {
+    // TODO
   }
 }

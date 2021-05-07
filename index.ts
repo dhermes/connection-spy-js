@@ -15,6 +15,10 @@ const SPY_PRODUCER = 'connection-spy'
  * For example, code that prepopulates a connection pool at application start.
  */
 export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): void {
+  monkeyPatchHTTPS(debug)
+}
+
+function monkeyPatchHTTPS(debug: winston.LeveledLogMethod): void {
   const originalHttpsAgent = https.Agent
 
   class SpyAgent extends originalHttpsAgent {

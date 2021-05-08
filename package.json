@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dhermes/ts-connection-spy.git"
+    "url": "git+https://github.com/dhermes/connection-spy-js.git"
   },
   "keywords": [
     "tcp",
@@ -23,9 +23,9 @@
   "author": "Danny Hermes",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/dhermes/ts-connection-spy/issues"
+    "url": "https://github.com/dhermes/connection-spy-js/issues"
   },
-  "homepage": "https://github.comdhermes/ts-connection-spy#readme",
+  "homepage": "https://github.comdhermes/connection-spy-js#readme",
   "engines": {
     "node": ">=14"
   },

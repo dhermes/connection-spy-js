@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/dhermes/connection-spy-js/issues"
   },
-  "homepage": "https://github.comdhermes/connection-spy-js#readme",
+  "homepage": "https://github.com/dhermes/connection-spy-js#readme",
   "engines": {
     "node": ">=14"
   },

@@ -133,13 +133,22 @@ function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winst
   }
 }
 
-function requestTarget(req: http.ClientRequest): string {
+function requestTarget(req: http.ClientRequest): types.Target {
   return `${req.method} ${req.protocol}//${req.host}:${PORT_SENTINEL}${req.path}`
 }
 
-function getContext(id: string, target: types.Target, socket: net.Socket): types.Context {
+function formatTarget(target: types.Target | undefined): string {
+  if (target === undefined) {
+    return ''
+  }
+  return target
+}
+
+function getContext(id: string, target: types.Target | undefined, socket: net.Socket): types.Context {
   const port = socket.remotePort || null
-  const fullTarget = target.replace(PORT_SENTINEL, `${port}`)
+  if (port !== null && target !== undefined) {
+    target = target.replace(PORT_SENTINEL, `${port}`)
+  }
   return {
     id,
     producer: SPY_PRODUCER,
@@ -147,7 +156,7 @@ function getContext(id: string, target: types.Target, socket: net.Socket): types
     localPort: socket.localPort || null,
     remoteAddress: socket.remoteAddress || null,
     remotePort: port,
-    target: fullTarget,
+    target: formatTarget(target),
   }
 }
 
@@ -185,7 +194,7 @@ function makeSocketConnectCallback(
 
 function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): types.SocketErrorCallback {
   return function socketError(this: net.Socket, err: Error): void {
-    const ctx = getContext(id, '', this)
+    const ctx = getContext(id, undefined, this)
     delete ctx.target
     debug('Socket Error', { ...ctx, err })
   }
@@ -193,7 +202,7 @@ function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): t
 
 function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod): types.SocketTimeoutCallback {
   return function socketTimeout(this: net.Socket): void {
-    const ctx = getContext(id, '', this)
+    const ctx = getContext(id, undefined, this)
     delete ctx.target
     debug('Socket Timeout', ctx)
   }
@@ -201,7 +210,7 @@ function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod):
 
 function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): types.SocketEndCallback {
   return function socketEnd(this: net.Socket): void {
-    const ctx = getContext(id, '', this)
+    const ctx = getContext(id, undefined, this)
     delete ctx.target
     debug('Socket End', ctx)
   }
@@ -209,7 +218,7 @@ function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): typ
 
 function makeSocketCloseCallback(id: string, debug: winston.LeveledLogMethod): types.SocketCloseCallback {
   return function socketClose(this: net.Socket, hadError: boolean): void {
-    const ctx = getContext(id, '', this)
+    const ctx = getContext(id, undefined, this)
     delete ctx.target
     debug('Socket Close', { ...ctx, hadError })
   }

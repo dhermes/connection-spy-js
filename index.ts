@@ -148,18 +148,61 @@ function formatTarget(target: types.Target | undefined): string {
   return `${target.method} ${target.protocol}//${target.host}:${target.port}${target.path}`
 }
 
-function getContext(id: string, target: types.Target | undefined, socket: net.Socket): types.Context {
-  const port = socket.remotePort || null
-  if (port !== null && target !== undefined) {
-    target.port = port
+function maybeSetPort(socket: net.Socket, target: types.Target): void {
+  if (target.port !== undefined) {
+    return
   }
+
+  if (socket.remotePort) {
+    target.port = socket.remotePort
+  }
+}
+
+function maybeSetProtocol(socket: net.Socket, target: types.Target): void {
+  if (target.protocol !== undefined) {
+    return
+  }
+
+  if (socket.constructor.name == 'TLSSocket') {
+    target.protocol = 'https:'
+    return
+  }
+  // NOTE: This **assumes** that the only connections in use will be HTTP / HTTPS.
+  if (socket.constructor.name == 'Socket') {
+    target.protocol = 'http:'
+    return
+  }
+}
+
+function maybeSetHost(socket: net.Socket, target: types.Target): void {
+  if (target.host !== undefined) {
+    return
+  }
+
+  const host: string | undefined = (socket as any)._host
+  if (typeof host === 'string') {
+    target.host = host
+  }
+}
+
+function maybeUpdateFromSocket(socket: net.Socket, target: types.Target | undefined): void {
+  if (target === undefined) {
+    return
+  }
+  maybeSetPort(socket, target)
+  maybeSetProtocol(socket, target)
+  maybeSetHost(socket, target)
+}
+
+function getContext(id: string, target: types.Target | undefined, socket: net.Socket): types.Context {
+  maybeUpdateFromSocket(socket, target)
   return {
     id,
     producer: SPY_PRODUCER,
     localAddress: socket.localAddress || null,
     localPort: socket.localPort || null,
     remoteAddress: socket.remoteAddress || null,
-    remotePort: port,
+    remotePort: socket.remotePort || null,
     target: formatTarget(target),
   }
 }

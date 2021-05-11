@@ -72,12 +72,12 @@ function monkeyPatchHTTPS(debug: winston.LeveledLogMethod): void {
 
 export function spyNewSocket(
   id: string,
-  targetTemplate: types.Target,
+  target: types.Target,
   socket: net.Socket,
   debug: winston.LeveledLogMethod = logger.debug,
 ): void {
   stashID(socket, id)
-  socket.on('connect', makeSocketConnectCallback(id, targetTemplate, debug))
+  socket.on('connect', makeSocketConnectCallback(id, target, debug))
   socket.on('error', makeSocketErrorCallback(id, debug))
   socket.on('timeout', makeSocketTimeoutCallback(id, debug))
   socket.on('end', makeSocketEndCallback(id, debug))
@@ -111,9 +111,9 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: wins
     cb: types.OncreateCallback,
   ): void {
     const id = uuid.v4()
-    const targetTemplate = requestTargetTemplate(req)
-    req.on('socket', makeClientRequestSocketCallback(id, targetTemplate, debug))
-    req.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
+    const target = requestTarget(req)
+    req.on('socket', makeClientRequestSocketCallback(id, target, debug))
+    req.on('response', makeClientRequestResponseCallback(id, target, debug))
 
     originalCreateSocket.apply(this, [req, options, cb])
   }
@@ -123,23 +123,23 @@ function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winst
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, req: http.ClientRequest): void {
     const id = getStashedID(socket) || uuid.v4()
-    const targetTemplate = requestTargetTemplate(req)
-    const ctx = getContext(id, targetTemplate, socket)
+    const target = requestTarget(req)
+    const ctx = getContext(id, target, socket)
     debug('Reuse Socket', ctx)
 
-    req.on('response', makeClientRequestResponseCallback(id, targetTemplate, debug))
+    req.on('response', makeClientRequestResponseCallback(id, target, debug))
     const reuseSocketResult = originalReuseSocket.apply(this, [socket, req])
     return reuseSocketResult
   }
 }
 
-function requestTargetTemplate(req: http.ClientRequest): string {
+function requestTarget(req: http.ClientRequest): string {
   return `${req.method} ${req.protocol}//${req.host}:${PORT_SENTINEL}${req.path}`
 }
 
-function getContext(id: string, targetTemplate: types.Target, socket: net.Socket): types.Context {
+function getContext(id: string, target: types.Target, socket: net.Socket): types.Context {
   const port = socket.remotePort || null
-  const fullTarget = targetTemplate.replace(PORT_SENTINEL, `${port}`)
+  const fullTarget = target.replace(PORT_SENTINEL, `${port}`)
   return {
     id,
     producer: SPY_PRODUCER,
@@ -153,32 +153,32 @@ function getContext(id: string, targetTemplate: types.Target, socket: net.Socket
 
 function makeClientRequestResponseCallback(
   id: string,
-  targetTemplate: types.Target,
+  target: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.ClientRequestResponseCallback {
   return function clientRequestResponse(response: http.IncomingMessage): void {
-    const ctx = getContext(id, targetTemplate, response.socket)
+    const ctx = getContext(id, target, response.socket)
     debug('HTTP(S) Response', ctx)
   }
 }
 
 function makeClientRequestSocketCallback(
   id: string,
-  targetTemplate: types.Target,
+  target: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.ClientRequestSocketCallback {
   return function clientRequestSocket(socket: net.Socket): void {
-    spyNewSocket(id, targetTemplate, socket, debug)
+    spyNewSocket(id, target, socket, debug)
   }
 }
 
 function makeSocketConnectCallback(
   id: string,
-  targetTemplate: types.Target,
+  target: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.SocketConnectCallback {
   return function socketConnect(this: net.Socket): void {
-    const ctx = getContext(id, targetTemplate, this)
+    const ctx = getContext(id, target, this)
     debug('Socket Connect', ctx)
   }
 }

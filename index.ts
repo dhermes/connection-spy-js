@@ -21,7 +21,6 @@ import * as winston from 'winston'
 import * as logger from './logger'
 import * as types from './types'
 
-const PORT_SENTINEL = '${PORT_8750beb7c50c}'
 const SPY_PRODUCER = 'connection-spy'
 
 /**
@@ -134,20 +133,25 @@ function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winst
 }
 
 function requestTarget(req: http.ClientRequest): types.Target {
-  return `${req.method} ${req.protocol}//${req.host}:${PORT_SENTINEL}${req.path}`
+  return {
+    method: req.method,
+    protocol: req.protocol,
+    host: req.host,
+    path: req.path,
+  }
 }
 
 function formatTarget(target: types.Target | undefined): string {
   if (target === undefined) {
     return ''
   }
-  return target
+  return `${target.method} ${target.protocol}//${target.host}:${target.port}${target.path}`
 }
 
 function getContext(id: string, target: types.Target | undefined, socket: net.Socket): types.Context {
   const port = socket.remotePort || null
   if (port !== null && target !== undefined) {
-    target = target.replace(PORT_SENTINEL, `${port}`)
+    target.port = port
   }
   return {
     id,

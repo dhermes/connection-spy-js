@@ -43,4 +43,10 @@ export interface Context {
   target?: string
 }
 
-export type Target = string
+export interface Target {
+  method: string
+  protocol: string
+  host: string
+  port?: number
+  path: string
+}

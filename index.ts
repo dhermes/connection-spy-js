@@ -72,7 +72,7 @@ function monkeyPatchHTTPS(debug: winston.LeveledLogMethod): void {
 
 export function spyNewSocket(
   id: string,
-  targetTemplate: string,
+  targetTemplate: types.Target,
   socket: net.Socket,
   debug: winston.LeveledLogMethod = logger.debug,
 ): void {
@@ -137,7 +137,7 @@ function requestTargetTemplate(req: http.ClientRequest): string {
   return `${req.method} ${req.protocol}//${req.host}:${PORT_SENTINEL}${req.path}`
 }
 
-function getContext(id: string, targetTemplate: string, socket: net.Socket): types.Context {
+function getContext(id: string, targetTemplate: types.Target, socket: net.Socket): types.Context {
   const port = socket.remotePort || null
   const fullTarget = targetTemplate.replace(PORT_SENTINEL, `${port}`)
   return {
@@ -153,7 +153,7 @@ function getContext(id: string, targetTemplate: string, socket: net.Socket): typ
 
 function makeClientRequestResponseCallback(
   id: string,
-  targetTemplate: string,
+  targetTemplate: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.ClientRequestResponseCallback {
   return function clientRequestResponse(response: http.IncomingMessage): void {
@@ -164,7 +164,7 @@ function makeClientRequestResponseCallback(
 
 function makeClientRequestSocketCallback(
   id: string,
-  targetTemplate: string,
+  targetTemplate: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.ClientRequestSocketCallback {
   return function clientRequestSocket(socket: net.Socket): void {
@@ -174,7 +174,7 @@ function makeClientRequestSocketCallback(
 
 function makeSocketConnectCallback(
   id: string,
-  targetTemplate: string,
+  targetTemplate: types.Target,
   debug: winston.LeveledLogMethod,
 ): types.SocketConnectCallback {
   return function socketConnect(this: net.Socket): void {

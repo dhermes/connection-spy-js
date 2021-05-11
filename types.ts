@@ -42,3 +42,5 @@ export interface Context {
   remotePort: number | null
   target?: string
 }
+
+export type Target = string

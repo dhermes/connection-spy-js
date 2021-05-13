@@ -141,9 +141,9 @@ function requestTarget(req: http.ClientRequest): types.Target {
   }
 }
 
-function formatTarget(target: types.Target | undefined): string {
+function formatTarget(target: types.Target | undefined): string | undefined {
   if (target === undefined) {
-    return ''
+    return undefined
   }
   return `${target.method} ${target.protocol}//${target.host}:${target.port}${target.path}`
 }
@@ -242,7 +242,6 @@ function makeSocketConnectCallback(
 function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): types.SocketErrorCallback {
   return function socketError(this: net.Socket, err: Error): void {
     const ctx = getContext(id, undefined, this)
-    delete ctx.target
     debug('Socket Error', { ...ctx, err })
   }
 }
@@ -250,7 +249,6 @@ function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): t
 function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod): types.SocketTimeoutCallback {
   return function socketTimeout(this: net.Socket): void {
     const ctx = getContext(id, undefined, this)
-    delete ctx.target
     debug('Socket Timeout', ctx)
   }
 }
@@ -258,7 +256,6 @@ function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod):
 function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): types.SocketEndCallback {
   return function socketEnd(this: net.Socket): void {
     const ctx = getContext(id, undefined, this)
-    delete ctx.target
     debug('Socket End', ctx)
   }
 }
@@ -266,7 +263,6 @@ function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): typ
 function makeSocketCloseCallback(id: string, debug: winston.LeveledLogMethod): types.SocketCloseCallback {
   return function socketClose(this: net.Socket, hadError: boolean): void {
     const ctx = getContext(id, undefined, this)
-    delete ctx.target
     debug('Socket Close', { ...ctx, hadError })
   }
 }

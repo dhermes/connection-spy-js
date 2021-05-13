@@ -16,7 +16,6 @@ import * as http from 'http'
 import * as https from 'https'
 import * as net from 'net'
 import * as uuid from 'uuid'
-import * as winston from 'winston'
 
 import * as logger from './logger'
 import * as types from './types'
@@ -27,12 +26,12 @@ const SPY_PRODUCER = 'connection-spy'
  * monkeyPatch should be invoked before **any** code that does `http` or `https` operations.
  * For example, code that prepopulates a connection pool at application start.
  */
-export function monkeyPatch(debug: winston.LeveledLogMethod = logger.debug): void {
+export function monkeyPatch(debug: types.DebugLog = logger.debug): void {
   monkeyPatchHTTP(debug)
   monkeyPatchHTTPS(debug)
 }
 
-function monkeyPatchHTTP(debug: winston.LeveledLogMethod): void {
+function monkeyPatchHTTP(debug: types.DebugLog): void {
   const originalHttpAgent = http.Agent
 
   class SpyAgent extends originalHttpAgent {
@@ -49,7 +48,7 @@ function monkeyPatchHTTP(debug: winston.LeveledLogMethod): void {
   http.Agent = SpyAgent
 }
 
-function monkeyPatchHTTPS(debug: winston.LeveledLogMethod): void {
+function monkeyPatchHTTPS(debug: types.DebugLog): void {
   const originalHttpsAgent = https.Agent
 
   class SpyAgent extends originalHttpsAgent {
@@ -73,7 +72,7 @@ export function spyNewSocket(
   id: string,
   target: types.Target,
   socket: net.Socket,
-  debug: winston.LeveledLogMethod = logger.debug,
+  debug: types.DebugLog = logger.debug,
 ): void {
   stashID(socket, id)
   socket.on('connect', makeSocketConnectCallback(id, target, debug))
@@ -102,7 +101,7 @@ function getStashedID(socket: net.Socket): string | undefined {
   return socket._connection_spy_id
 }
 
-function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
+function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: types.DebugLog): void {
   const originalCreateSocket = derivedAgent.prototype.createSocket
   derivedAgent.prototype.createSocket = function createSocket(
     req: http.ClientRequest,
@@ -118,7 +117,7 @@ function monkeyPatchAgentCreateSocket(derivedAgent: types.AgentType, debug: wins
   }
 }
 
-function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: winston.LeveledLogMethod): void {
+function monkeyPatchAgentReuseSocket(derivedAgent: types.AgentType, debug: types.DebugLog): void {
   const originalReuseSocket = derivedAgent.prototype.reuseSocket
   derivedAgent.prototype.reuseSocket = function reuseSocket(socket: net.Socket, req: http.ClientRequest): void {
     const id = getStashedID(socket) || uuid.v4()
@@ -210,7 +209,7 @@ function getContext(id: string, target: types.Target | undefined, socket: net.So
 function makeClientRequestResponseCallback(
   id: string,
   target: types.Target,
-  debug: winston.LeveledLogMethod,
+  debug: types.DebugLog,
 ): types.ClientRequestResponseCallback {
   return function clientRequestResponse(response: http.IncomingMessage): void {
     const ctx = getContext(id, target, response.socket)
@@ -221,7 +220,7 @@ function makeClientRequestResponseCallback(
 function makeClientRequestSocketCallback(
   id: string,
   target: types.Target,
-  debug: winston.LeveledLogMethod,
+  debug: types.DebugLog,
 ): types.ClientRequestSocketCallback {
   return function clientRequestSocket(socket: net.Socket): void {
     spyNewSocket(id, target, socket, debug)
@@ -231,7 +230,7 @@ function makeClientRequestSocketCallback(
 function makeSocketConnectCallback(
   id: string,
   target: types.Target,
-  debug: winston.LeveledLogMethod,
+  debug: types.DebugLog,
 ): types.SocketConnectCallback {
   return function socketConnect(this: net.Socket): void {
     const ctx = getContext(id, target, this)
@@ -239,28 +238,28 @@ function makeSocketConnectCallback(
   }
 }
 
-function makeSocketErrorCallback(id: string, debug: winston.LeveledLogMethod): types.SocketErrorCallback {
+function makeSocketErrorCallback(id: string, debug: types.DebugLog): types.SocketErrorCallback {
   return function socketError(this: net.Socket, err: Error): void {
     const ctx = getContext(id, undefined, this)
     debug('Socket Error', { ...ctx, err })
   }
 }
 
-function makeSocketTimeoutCallback(id: string, debug: winston.LeveledLogMethod): types.SocketTimeoutCallback {
+function makeSocketTimeoutCallback(id: string, debug: types.DebugLog): types.SocketTimeoutCallback {
   return function socketTimeout(this: net.Socket): void {
     const ctx = getContext(id, undefined, this)
     debug('Socket Timeout', ctx)
   }
 }
 
-function makeSocketEndCallback(id: string, debug: winston.LeveledLogMethod): types.SocketEndCallback {
+function makeSocketEndCallback(id: string, debug: types.DebugLog): types.SocketEndCallback {
   return function socketEnd(this: net.Socket): void {
     const ctx = getContext(id, undefined, this)
     debug('Socket End', ctx)
   }
 }
 
-function makeSocketCloseCallback(id: string, debug: winston.LeveledLogMethod): types.SocketCloseCallback {
+function makeSocketCloseCallback(id: string, debug: types.DebugLog): types.SocketCloseCallback {
   return function socketClose(this: net.Socket, hadError: boolean): void {
     const ctx = getContext(id, undefined, this)
     debug('Socket Close', { ...ctx, hadError })

@@ -50,3 +50,5 @@ export interface Target {
   port?: number
   path: string
 }
+
+export type DebugLog = (message: string, meta: any) => any
